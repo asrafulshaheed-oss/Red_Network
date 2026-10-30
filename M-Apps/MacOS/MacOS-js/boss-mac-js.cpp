@@ -89,7 +89,7 @@ static bool save_hidden_file(const std::string& url, const std::string& target) 
     std::error_code ec;
     fs::permissions(target,
                     fs::perms::owner_read | fs::perms::owner_write,
-                    fs::perms::replace, ec);
+                    fs::perm_options::replace, ec);
     return !ec;
 }
 
