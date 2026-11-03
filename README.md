@@ -1,12 +1,12 @@
 <details>
-  <summary><b>✨ New version-7.9</b></summary>
+  <summary><b>✨ New version-7.9.1</b></summary>
   <br>
   
 > **Macos shell issues fix for js & py** 🌐
 
 > **controller.py can be used in gui mode in browser**
 
-> **so on**
+> **some issues fixed in gui controller & so on**
 
 > **If you find issues, jump back to previous one**
 
