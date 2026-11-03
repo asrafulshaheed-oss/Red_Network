@@ -1,0 +1,13 @@
+{
+  "name": "cmon-fixed",
+  "version": "3.0.0",
+  "private": true,
+  "description": "CMon fixed set: fixed_controller.py (GUI: chunk-boundary-safe terminal sanitizer so the Windows ConPTY shell renders, terminal renderer for shell echo, visible upex hidden tick, ordered keystrokes, upex panel, screenshots, screenshare), fixed_client.js (Windows ConPTY handle passed by ref so the real pseudoconsole starts; macOS green-screen fix: JPEG restart markers + BI_BITFIELDS BMP), fixed_client.py (Windows shell fallbacks report failures on the shell channel; macOS/iOS shell fix)",
+  "scripts": {
+    "start": "python3 fixed_controller.py || python fixed_controller.py",
+    "start:py": "python3 fixed_controller.py",
+    "client": "python3 fixed_client.py",
+    "client:node": "node fixed_client.js",
+    "help": "python3 fixed_controller.py --help || true"
+  }
+}
