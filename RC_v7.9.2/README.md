@@ -1,5 +1,5 @@
 <details>
-  <summary><b>✨ New version-7.9.1</b></summary>
+  <summary><b>✨ New version-7.9.2</b></summary>
   <br>
   
 > **Both Windows and Macos shell feature fixed** 🌐
