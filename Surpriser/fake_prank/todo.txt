@@ -1,0 +1,15 @@
+analyze this whole dir, it's your working dir, don't go or work outside this dir
+you can check .work folder
+
+This is just fake ransom dot CS. I want you to make fake ransom dot py and fake ransom dot JS. 
+
+fake ransom dot py will be only for Linux. It can be any Linux Debian Ubuntu, Fedora, Red Hat, Arch, Omerki, Linux Mint, Jorinoes, any kind of Linux, Pac-Man, Deb, RPM, etc. Python version should be for Linux. 
+Java script version fake ransom dot JS will be only for MacBook. It will be for latest MacBook.
+
+make sure no bugs and no errors in running
+make sure that everything exactly same as fake_ransom.cs
+no mouse 
+only keyboard
+whole window covered
+scary animations 
+etc
