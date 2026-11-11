@@ -1,14 +1,14 @@
 <details>
-  <summary><b>✨ New version-7.9.1</b></summary>
+  <summary><b>✨ New version-7.9.5</b></summary>
   <br>
   
-> **Macos shell issues fix for js & py** 🌐
+> **Both Windows and Macos shell feature fixed** 🌐
 
-> **controller.py can be used in gui mode in browser**
-
-> **some issues fixed in gui controller & so on**
+> **some bugs fixed & so on**
 
 > **If you find issues, jump back to previous one**
+
+> **All client has cross platform support but py is mainly for linux, cs for windows, js for mac**
 
 </details>
 
