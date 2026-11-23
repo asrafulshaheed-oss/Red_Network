@@ -118,6 +118,35 @@ fi
 
 cd /tmp
 
+# =========================================================
+# CLEANUP: KILL PROCESSES & DELETE FILES
+# =========================================================
+# Define paths and file variations (Linux equivalent of ProgramData\.config)
+# =========================================================
+# CLEANUP: KILL PROCESSES & DELETE FILES
+# =========================================================
+# 1. Kill any running processes related to the payload
+# CRITICAL: `|| true` prevents `set -e` from crashing the script if no process is found
+pkill -9 -f "run-fake_noanime_ransom.sh" || true
+pkill -9 -f "fake_noanime_ransom.py" || true
+pkill -9 -f "fake_noanime_ransom.pyw" || true
+
+# 2. Define paths to check (current user's .config + any user in /home)
+CLEANUP_DIRS="$HOME/.config"
+for d in /home/*/.config; do
+    if [ -d "$d" ]; then
+        CLEANUP_DIRS="$CLEANUP_DIRS $d"
+    fi
+done
+
+# 3. Permanently delete files from all identified directories
+for dir in $CLEANUP_DIRS; do
+    rm -f -- "$dir/run-fake_noanime_ransom.sh" 2>/dev/null || true
+    rm -f -- "$dir/fake_noanime_ransom.py" 2>/dev/null || true
+    rm -f -- "$dir/fake_noanime_ransom.pyw" 2>/dev/null || true
+done
+# =========================================================
+
 # --- 2. run it under bash with optional arg, then delete it ---
 if [ -n "$ARG" ]; then
     echo "==> Running: bash ${FILE1} ${ARG}"
