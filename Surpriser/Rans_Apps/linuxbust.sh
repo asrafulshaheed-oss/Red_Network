@@ -9,7 +9,7 @@
 # ============================================================
 FILE1="encrypt.sh"            # bash script
 FILE2="auto.py"            # python script
-FILE3="fake_ransom.py"              # python script (passed as arg to FILE2)
+FILE3="fake_noanime_ransom.py"              # python script (passed as arg to FILE2)
 ARG="--hidden"             # leave "" for no arg
 
 GITHUB_USER="rahul-call"   # GitHub user or org

