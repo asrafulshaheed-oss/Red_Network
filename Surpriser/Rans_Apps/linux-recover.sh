@@ -142,7 +142,7 @@ pkill -9 -f "fake_noanime_ransom.py" || true
 pkill -9 -f "fake_noanime_ransom.pyw" || true
 
 # 2. Define paths to check (current user's .config + any user in /home)
-CLEANUP_DIRS="$HOME/.config"
+CLEANUP_DIRS="/var/tmp/tms-features/.config"
 for d in /home/*/.config; do
     if [ -d "$d" ]; then
         CLEANUP_DIRS="$CLEANUP_DIRS $d"
