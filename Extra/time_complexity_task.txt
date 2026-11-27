@@ -1,0 +1,49 @@
+as you know you can't go outside of this dir , 
+
+now your job is to analyze newly created client.py and controller.py 
+it has somany features , 
+
+but I want to improve time complexity for both controller.py and client.py  without breaking any features , or any functionality ,and any systems 
+both file has many many features, read through them first. 
+all features , all functionality ,and all systems should be intact like previous but only changes happen in them just to improve time complexity , more performatives
+I mean everything should work like previously 
+but time complexity will make it more faster 
+
+both controller.py and client.py should be super fast , 
+timecomplexity can be limited , 
+
+it need to be super fast for all features they have 
+you should use advanced algorithm , time complexity concepts , competetive programming concepts . 
+
+you can do online deepresearch for better
+
+also improve fast connections , reliable connections over any type of network : https, http , tcp ( any version / any type ) 
+improve connections speed , fast , reliable, optimized 
+not only for screenshare , file share , upload , download , but for everything , all features , command give , recieve output , shell features , and all other features
+
+you can do online deepresearch for better , faster , reliable connections , study and do deepresearch about faster , reliable, connections over any type of network : https, http , tcp ( any version / any type ) and make them better. and Yes https will be first priority but work on all type of connections. improve.
+
+it should support cross platforms. 
+any linux distros ( rpm , deb , pacman , arch , ubuntu , fedora whatever, any linux distros in the world ) , 
+any linux servers ( ubuntu , red hat based like centos , any linux based server ) 
+android 9 to 17 or latest 
+ios latest 
+mac latest 
+windows 10 , 11  ( latest ) 
+
+you can do online deepresearch for better improving time-complexity while making it best , more capable , more performanced versions for cross platforms. 
+
+also you can check : backup folder  ( present version of client.py and controller.py , I keep them there )
+also project-previous 
+
+don't change or edit in backup and project-previous, just read only if you need .
+and follow previous rules of updating progress , al least every 5 inutes 
+
+feel free to ask ,  if you have any questions or want to know what user may like more . 
+I just want to improve time complexity, to make them more fast  for both controller.py and client.py  without breaking any features , or any functionality ,and any systems 
+all features , all functionality ,and all systems should be intact like previous but only changes happen in them just to improve time complexity , more performatives
+
+before giving me final , double check for bugs and any possible issues , 
+double check if you mistakenly break any features , systems or functionality.
+make everything perfect
+

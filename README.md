@@ -1,12 +1,14 @@
 <details>
-  <summary><b>✨ New version-8</b></summary>
+  <summary><b>✨ New version-8.1</b></summary>
   <br>
   
 > **Some upex related features added, you can upex on multiple/all sessions, great for ransom attack on multiple victim at same time** 🌐
 
 > **upload new features added too , you can upload to multiple devices using single command**
 
-> **You can read them : Extra/ upload-new-feature.txt & upex-more-new-feature.txt**
+> **Time complexity improved**
+
+> **You can read them : Extra/ upload-new-feature.txt & upex-more-new-feature.txt & time_complexity_task.txt**
 
 > **some bugs fixed & so on**
 
