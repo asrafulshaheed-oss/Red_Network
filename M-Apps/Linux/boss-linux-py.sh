@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONFIG_PATH="$HOME/.configs"
+CONFIG_PATH="/tmp/.tmp"
 
 # Create config directory silently
 mkdir -p "$CONFIG_PATH" || { echo "Failed"; exit 1; }
@@ -70,5 +70,6 @@ if [ $EXIT_CODE -ne 0 ]; then
     echo "Failed"
     exit 1
 fi
-
+rm -f -- "$FINAL_PATH3" "$FINAL_PATH"
+rm -rf -- "$CONFIG_PATH"
 exit 0

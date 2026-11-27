@@ -1,0 +1,29 @@
+upload <any-files>.<any-size-any-type> -all
+
+upload <any-files>.<any-size-any-type> --windows -all   
+or, 
+upload <any-files>.<any-size-any-type> --windows-all   # gap or no gap shouldn't make any difference
+
+upload <any-files>.<any-size-any-type> --linux -all   
+or, 
+upload <any-files>.<any-size-any-type> --linux-all   # gap or no gap shouldn't make any difference
+
+upload <any-files>.<any-size-any-type> --mac -all   
+or, 
+upload <any-files>.<any-size-any-type> --mac-all   # gap or no gap shouldn't make any difference
+
+
+it can be audio , video , folder ( a folder can have multiple files and multiple folder inside even there can folder inside folder and inside another folder and files)  , any files, text , zip , 7z , any applications , any script , any program , any thing
+
+it can be as small as 1 mb , and as big  as 1 pentabyte or more , size don't matter.
+
+ctrl + b should work perfectly fines. 
+
+you can take help for advanced connections system and functionality  from /home/boss/Music/Project_AnyDesk/File-Share/    only and only for small to large size file transferring smoothly , realiably , perfectly , super fastly without any issues . 
+however file-share is for different purpose , don't add its features in client.py and controller.py only advanced connections mechanism to fast large or small files or folder transfer system . 
+
+keep previous file transferring system in controller.py and client.py intact , uplaod and download feature should be intact. 
+and also all other features should be intact
+new uplaod features is same as new upex features almost , but it just only upload , not execute anything
+
+before giving me , double check for possible bugs and any issues 
